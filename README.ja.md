@@ -150,3 +150,14 @@ Valkeyの著作権表示・ライセンスは`LICENSE.valkey`とイメージ内`
 GitHubリポジトリはhttps://github.com/NCCGr/kener-pterodactylです。GitHub Actionsの`Build and publish container`を手動実行し、公開するタグを指定します。バージョンタグ`v4.2.0-egg.3`のようなGitタグをpushした場合も公開します。Actionsの`GITHUB_TOKEN`を使用し、個人アクセストークンをソースへ保存しません。
 
 GHCRの新規パッケージは初回に非公開で作成されます。初回公開後、パッケージ設定で可視性をPublicに変更し、認証なしの取得を確認してください。
+
+GitHub Actionsを利用できない場合は、`write:packages`権限を持つGitHub CLI認証で手動登録できます。次の例はGitHub CLIの認証済みユーザーで実行します。トークンをファイルや起動設定に書き込む必要はありません。
+
+```sh
+gh auth refresh --hostname github.com --scopes write:packages
+gh auth token | docker login ghcr.io --username "$(gh api user --jq .login)" --password-stdin
+docker build -t ghcr.io/nccgr/kener-pterodactyl:4.2.0-egg.3 .
+docker push ghcr.io/nccgr/kener-pterodactyl:4.2.0-egg.3
+```
+
+Dockerへの認証情報はDockerの設定に従って保存されます。共有端末では作業後に`docker logout ghcr.io`で削除してください。

@@ -2,6 +2,19 @@
 
 確認日: 2026-11-06（JST）
 
+## GHCRへの公開
+
+- 公開リポジトリ: https://github.com/NCCGr/kener-pterodactyl
+- 公開イメージ: `ghcr.io/nccgr/kener-pterodactyl:4.2.0-egg.3`
+- 公開ダイジェスト: `sha256:725ccdc0a32be91389627ff3c649c3a91f68861402f8476d54b7186acddb75a5`
+- Linux/amd64用イメージを手動ビルド・pushし、パッケージのPublic表示とバージョンタグを確認。
+- 空のDockerクライアント設定を使って、GitHub/GHCRの認証なしでpull成功を確認。取得したダイジェストも一致。
+- Eggの参照先をGHCRへ更新し、ノードごとの事前ビルドを不要に変更。
+- パッケージ更新用Actionsの定義を追加。CI経由でのビルド・公開の実行成功は未確認で、初回公開は手動で実施。
+- イメージのソースはコミット`c66152ef5916fafa7d7e648517e76db74fcedb0e`。実トンネルトークンやインスタンスのデータ・秘密鍵は含めていません。
+
+既存サーバーのDockerイメージ指定は、Eggファイルの更新だけでは切り替わらない場合があります。既存サーバーでは起動設定のDockerイメージをGHCRの参照先へ変更してください。
+
 ## egg.3 Panel互換修正
 
 - ユーザー環境でEggの保存時に`The docker images format is invalid.`が発生。
