@@ -1,0 +1,62 @@
+{
+  "_comment": "Kener用の非公式Eggです。GHCRの公開イメージを使用します。導入手順はREADME.ja.mdを参照してください。",
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": null
+  },
+  "exported_at": "2026-11-06T00:00:00+09:00",
+  "name": "Kener（SQLite・Valkey・Cloudflare Tunnel対応）",
+  "author": "noreply@example.com",
+  "description": "Kener 4.2.0のステータスページを動かす非公式Eggです。SQLiteによるデータ保存、Redis互換のValkey、秘密鍵の自動生成、起動時の正常性確認、安全な停止処理に対応します。GHCRの専用Dockerイメージを使用します。ノードでの事前ビルドは不要です。起動前に公開URL（ORIGIN）を設定してください。Cloudflare Tunnelのトークンを入力すると、トンネル経由で公開します。空欄なら割り当てポートで公開します。アプリの更新にはイメージの更新が必要です。再インストールでは更新されません。",
+  "features": null,
+  "docker_images": {
+    "Kener 4.2.0 - Valkey - Cloudflare Tunnel": "ghcr.io/nccgr/kener-pterodactyl:4.2.0-egg.3"
+  },
+  "file_denylist": [],
+  "startup": "/usr/local/bin/kener-start",
+  "config": {
+    "files": "{}",
+    "startup": "{\"done\":\"[kener-egg] 起動完了: ポート\"}",
+    "logs": "{}",
+    "stop": "^C"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/ash\nset -eu\ncd /mnt/server\nmkdir -p database redis\nprintf '%s\\n' 'Kenerの保存ディレクトリを準備しました。アプリ本体は専用イメージに含まれています。'\n",
+      "container": "alpine:3.23",
+      "entrypoint": "ash"
+    }
+  },
+  "variables": [
+    {
+      "name": "公開URL（必須）",
+      "description": "ブラウザーでアクセスする公開URLを入力します。例: https://status.example.net。Cloudflare Tunnelを使う場合は、Cloudflare側に設定した公開ホスト名のHTTPS URLを指定してください。通常のポート公開では、必要に応じて末尾に:3000などのポート番号を付けます。/statusなどのパスは付けられません。",
+      "env_variable": "ORIGIN",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|url|max:255",
+      "field_type": "text"
+    },
+    {
+      "name": "アップロード容量の上限",
+      "description": "画像などをアップロードする際のリクエスト容量の上限です。初期値は3M（3MiB）です。Kener本体の画像サイズ制限にも従います。別途リバースプロキシを使う場合は、そちらの容量制限も合わせてください。",
+      "env_variable": "BODY_SIZE_LIMIT",
+      "default_value": "3M",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|regex:/^[1-9][0-9]*[KMG]?$/|max:8",
+      "field_type": "text"
+    },
+    {
+      "name": "Cloudflare Tunnelのトークン（任意）",
+      "description": "Cloudflareで作成したリモート管理トンネルのトークン値だけを入力します。空欄の場合はトンネルを使いません。Cloudflare側の転送先をhttp://127.0.0.1:3000に設定し、公開URL（ORIGIN）をそのホスト名のHTTPS URLに合わせてください。コマンド全体やAPIトークンは入力しないでください。この値はPanelの環境変数として保存され、権限のある管理者などが参照できます。変更後はサーバーを再起動してください。",
+      "env_variable": "CLOUDFLARED_TOKEN",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:8192",
+      "field_type": "text"
+    }
+  ]
+}

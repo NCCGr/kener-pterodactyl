@@ -1,0 +1,7 @@
+*
+!Dockerfile
+!supervisor.mjs
+!kener-start
+!LICENSE.valkey
+!LICENSE.cloudflared
+!patch-kener.mjs

@@ -1,0 +1,71 @@
+name: Build and publish container
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '公開するタグ（例: 4.2.0-egg.3）'
+        required: true
+        default: '4.2.0-egg.3'
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: ソースを取得
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: タグとイメージ名を確認
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="$INPUT_VERSION"
+          fi
+          if [[ ! "$version" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$ ]]; then
+            echo 'Invalid container tag' >&2
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo 'IMAGE=ghcr.io/nccgr/kener-pterodactyl' >> "$GITHUB_ENV"
+
+      - name: 構文と互換性を確認
+        run: |
+          node --check supervisor.mjs
+          node --experimental-vm-modules --test tests/supervisor.test.mjs tests/egg-compatibility.test.mjs
+
+      - name: GHCRへ認証
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_ACTOR: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_ACTOR" --password-stdin
+
+      - name: ビルドして公開
+        run: |
+          docker build --pull \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "org.opencontainers.image.version=$VERSION" \
+            -t "$IMAGE:$VERSION" .
+          docker push "$IMAGE:$VERSION"
+
+      - name: Docker認証を削除
+        if: always()
+        run: docker logout ghcr.io

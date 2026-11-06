@@ -1,0 +1,8 @@
+.env
+.kener-secret
+database/
+redis/
+node_modules/
+*.tar
+*.tar.gz
+*.zip
